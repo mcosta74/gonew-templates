@@ -25,7 +25,7 @@ var (
 	showVersion   bool
 	showBuildInfo bool
 
-	logLevel  string
+	logLevel  slog.Level
 	logFormat string
 )
 
@@ -36,7 +36,7 @@ func init() {
 	fs.BoolVar(&showBuildInfo, "V", false, "Print build information and exit")
 
 	fs.StringVar(&logFormat, "log.format", getEnv("APP_LOG_FORMAT", "text"), "Log format (text, json)")
-	fs.StringVar(&logLevel, "log.level", getEnv("APP_LOG_LEVEL", slog.LevelInfo.String()), "Log level (debug, info, warn, error)")
+	fs.TextVar(&logLevel, "log.level", getLogLevelEnv("APP_LOG_LEVEL", slog.LevelInfo), "Log level (debug, info, warn, error)")
 }
 
 func main() {
@@ -65,13 +65,19 @@ func getEnv(key string, defaultValue string) string {
 	return defaultValue
 }
 
-func initLogger() *slog.Logger {
-	var lvl slog.Level
-	if err := lvl.UnmarshalText([]byte(logLevel)); err != nil {
-		lvl = slog.LevelInfo
+func getLogLevelEnv(key string, defaultLevel slog.Level) slog.Level {
+	lvl := defaultLevel
+	if val, ok := os.LookupEnv(key); ok {
+		if err := lvl.UnmarshalText([]byte(val)); err != nil {
+			return defaultLevel
+		}
 	}
+	return lvl
+}
+
+func initLogger() *slog.Logger {
 	opts := &slog.HandlerOptions{
-		Level:     lvl,
+		Level:     logLevel,
 		AddSource: true,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			switch a.Key {
