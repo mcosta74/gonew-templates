@@ -2,5 +2,5 @@
 
 Templates to be used with the `gonew` tool
 
-- [Base](./base/README.md): base project with version info
-- 
+- [base](./base/README.md): basic project with version info
+- [with-logger](./with-logger/README.md): `base` project + logging using `log/slog`
